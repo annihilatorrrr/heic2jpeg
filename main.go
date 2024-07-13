@@ -3,6 +3,10 @@ package main
 import (
 	"archive/zip"
 	"fmt"
+	"golang.org/x/image/draw"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"log"
 	"mime/multipart"
@@ -13,33 +17,43 @@ import (
 	"sync"
 	"time"
 
+	"github.com/chai2010/tiff"
+	"github.com/jdeng/goheif"
+
 	"github.com/julienschmidt/httprouter"
-	"gopkg.in/h2non/bimg.v1"
 )
 
 const maxFileSize = 500 << 20 // 500MB
 
 func convertHEIC(inputPath, outputPath, format string) error {
-	buffer, err := bimg.Read(inputPath)
+	file, err := os.Open(inputPath)
 	if err != nil {
 		return err
 	}
-	image := bimg.NewImage(buffer)
-	var converted []byte
+	defer file.Close()
+	img, err := goheif.Decode(file)
+	if err != nil {
+		return err
+	}
+	bounds := img.Bounds()
+	rgba := image.NewRGBA(bounds)
+	draw.Copy(rgba, image.Point{}, img, bounds, draw.Src, nil)
+	outFile, err := os.Create(outputPath)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
 	switch format {
 	case "jpeg":
-		converted, err = image.Convert(bimg.JPEG)
+		err = jpeg.Encode(outFile, rgba, &jpeg.Options{Quality: 100})
 	case "png":
-		converted, err = image.Convert(bimg.PNG)
+		err = png.Encode(outFile, rgba)
 	case "tiff":
-		converted, err = image.Convert(bimg.TIFF)
+		err = tiff.Encode(outFile, rgba, nil)
 	default:
 		return fmt.Errorf("unsupported format: %s", format)
 	}
 	if err != nil {
-		return err
-	}
-	if err = bimg.Write(outputPath, converted); err != nil {
 		return err
 	}
 	return nil
