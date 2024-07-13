@@ -5,12 +5,6 @@ COPY . .
 RUN go build -ldflags="-w -s" .
 FROM debian:latest
 RUN apt update && apt upgrade -y
-RUN apt install -y ffmpeg apt-utils build-essential git cmake make pkg-config libx265-dev libde265-dev libjpeg-dev libtool libheif-dev
-RUN git clone https://github.com/strukturag/libheif.git && \
-    cd libheif && \
-    mkdir build && cd build && \
-    cmake .. && \
-    make && \
-    make install
+RUN apt install ffmpeg apt-utils build-essential pkg-config libx265-dev libde265-dev libjpeg-dev libtool libheif-dev -y
 COPY --from=builder /heic2jpeg/heic2jpeg /heic2jpeg
 ENTRYPOINT ["/heic2jpeg"]
