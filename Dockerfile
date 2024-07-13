@@ -3,7 +3,7 @@ WORKDIR /heic2jpeg
 RUN apt update && apt upgrade -y
 COPY . .
 RUN go build -ldflags="-w -s" .
-FROM debian:stable-slim
+FROM debian:latest
 RUN apt update && apt upgrade -y
 RUN apt install -y ffmpeg apt-utils build-essential git cmake make pkg-config libx265-dev libde265-dev libjpeg-dev libtool libheif-dev
 RUN git clone https://github.com/strukturag/libheif.git && \
