@@ -1,40 +1,25 @@
-# Build stage
-FROM golang:1.22.5-alpine3.20 as builder
+FROM golang:1.22.5-slim-bookworm
 WORKDIR /heic2jpeg
-
-# Install necessary packages
-RUN apk update && apk add --no-cache build-base git cmake make x265-dev g++ libde265-dev jpeg-dev libtool
-
-# Clone and build libheif
+RUN apt update && apt upgrade -y
+RUN apt install -y ffmpeg apt-utils build-essential git cmake make pkg-config libx265-dev libde265-dev libjpeg-dev libtool
 RUN git clone https://github.com/strukturag/libheif.git && \
     cd libheif && \
-    mkdir build && \
-    cd build && \
+    mkdir build && cd build && \
     cmake .. && \
     make && \
-    make install && \
-    ldconfig
-
-# Copy source code and build Go project
+    make install
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 COPY . .
 RUN go build -ldflags="-w -s" .
-
-# Final stage
-FROM alpine:3.20.1
-
-# Install only the necessary runtime dependencies
-RUN apk update && apk add --no-cache x265 libde265 jpeg
-
-# Copy the built libheif from the builder stage
-COPY --from=builder /usr/local/lib/libheif.so* /usr/local/lib/
-COPY --from=builder /usr/local/include/libheif /usr/local/include/libheif
-COPY --from=builder /usr/local/bin/heif-* /usr/local/bin/
-
-# Copy the built binary from the builder stage
+FROM debian:bookworm-slim
+RUN apt update && apt upgrade -y
+RUN apt install -y ffmpeg apt-utils build-essential git cmake make pkg-config libx265-dev libde265-dev libjpeg-dev libtool
+RUN git clone https://github.com/strukturag/libheif.git && \
+    cd libheif && \
+    mkdir build && cd build && \
+    cmake .. && \
+    make && \
+    make install
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 COPY --from=builder /heic2jpeg/heic2jpeg /heic2jpeg
-
-# Update the dynamic linker run-time bindings
-RUN ldconfig
-
-# Set entrypoint
 ENTRYPOINT ["/heic2jpeg"]

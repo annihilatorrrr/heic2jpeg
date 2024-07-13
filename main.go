@@ -3,9 +3,7 @@ package main
 import (
 	"archive/zip"
 	"fmt"
-	"image"
-	"image/jpeg"
-	"image/png"
+	"github.com/MaestroError/go-libheif"
 	"io"
 	"log"
 	"mime/multipart"
@@ -16,41 +14,18 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/image/draw"
-
-	"github.com/adrium/goheif"
-	"github.com/chai2010/tiff"
-
 	"github.com/julienschmidt/httprouter"
 )
 
 const maxFileSize = 500 << 20 // 500MB
 
 func convertHEIC(inputPath, outputPath, format string) error {
-	file, err := os.Open(inputPath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	img, err := goheif.Decode(file)
-	if err != nil {
-		return err
-	}
-	bounds := img.Bounds()
-	rgba := image.NewRGBA(bounds)
-	draw.Copy(rgba, image.Point{}, img, bounds, draw.Src, nil)
-	outFile, err := os.Create(outputPath)
-	if err != nil {
-		return err
-	}
-	defer outFile.Close()
+	var err error
 	switch format {
 	case "jpeg":
-		err = jpeg.Encode(outFile, rgba, &jpeg.Options{Quality: 100})
+		err = libheif.HeifToJpeg(inputPath, outputPath, 100)
 	case "png":
-		err = png.Encode(outFile, rgba)
-	case "tiff":
-		err = tiff.Encode(outFile, rgba, nil)
+		err = libheif.HeifToPng(inputPath, outputPath)
 	default:
 		return fmt.Errorf("unsupported format: %s", format)
 	}
@@ -72,7 +47,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 		return
 	}
 	format := r.FormValue("format")
-	if format != "jpeg" && format != "png" && format != "tiff" {
+	if format != "jpeg" && format != "png" {
 		http.Error(w, "Unsupported format", http.StatusBadRequest)
 		return
 	}
@@ -220,7 +195,7 @@ func addFileToZip(zipWriter *zip.Writer, filePath, filename string) error {
 }
 
 func thehome(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
-	_, _ = w.Write([]byte("I'm alive!\nWelcome to HEIC to Image Converter\n\nBy @annihilatorrrr"))
+	_, _ = w.Write([]byte("I'm alive!\nWelcome to HEIC to Image (JPEG/ PNG) Converter!\n\nBy @annihilatorrrr"))
 }
 
 func main() {
