@@ -63,15 +63,15 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	}
 	tempDir := filepath.Join(os.TempDir(), fmt.Sprintf("heic-convert-%d", time.Now().UnixNano()))
 	if err = os.MkdirAll(tempDir, os.ModePerm); err != nil {
-		log.Println(err.Error())
+		log.Println(err)
 		http.Error(w, "Failed to create temp directory", http.StatusInternalServerError)
 		return
 	}
-	_, _ = fmt.Fprint(w, http.StatusCreated)
 	defer os.RemoveAll(tempDir)
-	var wg sync.WaitGroup
 	errChan := make(chan error, len(files))
-	for _, fileHeader := range files {
+	var wg sync.WaitGroup
+	if len(files) == 1 {
+		fileHeader := files[0]
 		wg.Add(1)
 		go func(fileHeader *multipart.FileHeader) {
 			defer wg.Done()
@@ -98,6 +98,35 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 				return
 			}
 		}(fileHeader)
+	} else {
+		for _, fileHeader := range files {
+			wg.Add(1)
+			go func(fileHeader *multipart.FileHeader) {
+				defer wg.Done()
+				file, err := fileHeader.Open()
+				if err != nil {
+					errChan <- fmt.Errorf("failed to open file %s: %v", fileHeader.Filename, err)
+					return
+				}
+				defer file.Close()
+				inputPath := filepath.Join(tempDir, fileHeader.Filename)
+				outputPath := filepath.Join(tempDir, strings.TrimSuffix(fileHeader.Filename, ".heic")+"."+format)
+				out, err := os.Create(inputPath)
+				if err != nil {
+					errChan <- fmt.Errorf("failed to create temp file %s: %v", inputPath, err)
+					return
+				}
+				defer out.Close()
+				if _, err = io.Copy(out, file); err != nil {
+					errChan <- fmt.Errorf("failed to save uploaded file %s: %v", inputPath, err)
+					return
+				}
+				if err = convertHEIC(inputPath, outputPath, format); err != nil {
+					errChan <- fmt.Errorf("failed to convert file %s: %v", inputPath, err)
+					return
+				}
+			}(fileHeader)
+		}
 	}
 	wg.Wait()
 	close(errChan)
@@ -107,14 +136,22 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 			return
 		}
 	}
-	zipPath := filepath.Join(tempDir, "converted_files.zip")
-	err = createZip(tempDir, zipPath, format)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to create zip archive: %v", err), http.StatusInternalServerError)
-		return
+	// If there's more than one file, create the zip archive
+	if len(files) > 1 {
+		zipPath := filepath.Join(tempDir, "converted_files.zip")
+		if err = createZip(tempDir, zipPath, format); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to create zip archive: %v", err), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Disposition", "attachment; filename=converted_files.zip")
+		http.ServeFile(w, r, zipPath)
+	} else {
+		// If there's only one file, serve it directly without zipping
+		fileHeader := files[0]
+		inputPath := filepath.Join(tempDir, fileHeader.Filename)
+		w.Header().Set("Content-Disposition", "attachment; filename="+fileHeader.Filename)
+		http.ServeFile(w, r, inputPath)
 	}
-	http.ServeFile(w, r, zipPath)
-	_, _ = fmt.Fprint(w, http.StatusOK)
 }
 
 func createZip(sourceDir, zipPath, format string) error {
