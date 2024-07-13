@@ -3,7 +3,6 @@ package main
 import (
 	"archive/zip"
 	"fmt"
-	"golang.org/x/image/draw"
 	"image"
 	"image/jpeg"
 	"image/png"
@@ -16,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/image/draw"
 
 	"github.com/adrium/goheif"
 	"github.com/chai2010/tiff"
