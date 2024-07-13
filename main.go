@@ -77,6 +77,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 			defer wg.Done()
 			file, err := fileHeader.Open()
 			if err != nil {
+				log.Println(err)
 				errChan <- fmt.Errorf("failed to open file %s: %v", fileHeader.Filename, err)
 				return
 			}
@@ -85,15 +86,18 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 			outputPath := filepath.Join(tempDir, strings.TrimSuffix(fileHeader.Filename, ".heic")+"."+format)
 			out, err := os.Create(inputPath)
 			if err != nil {
+				log.Println(err)
 				errChan <- fmt.Errorf("failed to create temp file %s: %v", inputPath, err)
 				return
 			}
 			defer out.Close()
 			if _, err = io.Copy(out, file); err != nil {
+				log.Println(err)
 				errChan <- fmt.Errorf("failed to save uploaded file %s: %v", inputPath, err)
 				return
 			}
 			if err = convertHEIC(inputPath, outputPath, format); err != nil {
+				log.Println(err)
 				errChan <- fmt.Errorf("failed to convert file %s: %v", inputPath, err)
 				return
 			}
@@ -105,6 +109,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 				defer wg.Done()
 				file, err := fileHeader.Open()
 				if err != nil {
+					log.Println(err)
 					errChan <- fmt.Errorf("failed to open file %s: %v", fileHeader.Filename, err)
 					return
 				}
@@ -113,15 +118,18 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 				outputPath := filepath.Join(tempDir, strings.TrimSuffix(fileHeader.Filename, ".heic")+"."+format)
 				out, err := os.Create(inputPath)
 				if err != nil {
+					log.Println(err)
 					errChan <- fmt.Errorf("failed to create temp file %s: %v", inputPath, err)
 					return
 				}
 				defer out.Close()
 				if _, err = io.Copy(out, file); err != nil {
+					log.Println(err)
 					errChan <- fmt.Errorf("failed to save uploaded file %s: %v", inputPath, err)
 					return
 				}
 				if err = convertHEIC(inputPath, outputPath, format); err != nil {
+					log.Println(err)
 					errChan <- fmt.Errorf("failed to convert file %s: %v", inputPath, err)
 					return
 				}
@@ -132,6 +140,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	close(errChan)
 	for err = range errChan {
 		if err != nil {
+			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -140,6 +149,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	if len(files) > 1 {
 		zipPath := filepath.Join(tempDir, "converted_files.zip")
 		if err = createZip(tempDir, zipPath, format); err != nil {
+			log.Println(err)
 			http.Error(w, fmt.Sprintf("Failed to create zip archive: %v", err), http.StatusInternalServerError)
 			return
 		}
