@@ -1,4 +1,4 @@
-FROM golang:1.22.5-slim-bookworm
+FROM golang:1.22.5-slim-bookworm as builder
 WORKDIR /heic2jpeg
 RUN apt update && apt upgrade -y
 COPY . .
