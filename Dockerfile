@@ -1,4 +1,4 @@
-FROM golang:1.22.5-slim-bookworm as builder
+FROM golang:1.22.5-bookworm as builder
 WORKDIR /heic2jpeg
 RUN apt update && apt upgrade -y
 COPY . .
@@ -12,6 +12,5 @@ RUN git clone https://github.com/strukturag/libheif.git && \
     cmake .. && \
     make && \
     make install
-ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 COPY --from=builder /heic2jpeg/heic2jpeg /heic2jpeg
 ENTRYPOINT ["/heic2jpeg"]
