@@ -1,3 +1,5 @@
+github.com/adrium/goheif v0.0.0-20200323230657-a0d6a8b3e68f h1:tpbuKdLUtPaAL3SLDWF0Vhpn13jmuwzNpHaP8k9cZEM=
+github.com/adrium/goheif v0.0.0-20200323230657-a0d6a8b3e68f/go.mod h1:aKVJoQ0cc9K5Xb058XSnnAxXLliR97qbSqWBlm5ca1E=
 github.com/chai2010/tiff v0.0.0-20211005095045-4ec2aa243943 h1:CjuhVIUiyWQZVY4rmcvm/9R+60e/Wi6LkXyHU38MqXI=
 github.com/chai2010/tiff v0.0.0-20211005095045-4ec2aa243943/go.mod h1:FhMMqekobM33oGdTfbi65oQ9P7bnQ5/0EDfmleW35RE=
 github.com/jdeng/goheif v0.0.0-20200323230657-a0d6a8b3e68f h1:jYkcRYsnnvPF07yn4XJx3k8duM4KDw3QYB3p8bUrk80=

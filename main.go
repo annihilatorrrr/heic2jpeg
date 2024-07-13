@@ -17,8 +17,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/adrium/goheif"
 	"github.com/chai2010/tiff"
-	"github.com/jdeng/goheif"
 
 	"github.com/julienschmidt/httprouter"
 )
