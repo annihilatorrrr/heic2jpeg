@@ -4,6 +4,6 @@ RUN apk update && apk upgrade --available && sync && apk add --no-cache build-ba
 COPY . .
 RUN go build -ldflags="-w -s" .
 FROM alpine:3.20.1
-# RUN apk update && apk upgrade --available && sync && apk add --no-cache libpng-dev jpeg-dev libwebp-dev tiff-dev zlib-dev vips-dev
+RUN apk update && apk upgrade --available && sync && apk add --no-cache libpng-dev jpeg-dev libwebp-dev tiff-dev zlib-dev vips-dev
 COPY --from=builder /heic2jpeg/heic2jpeg /heic2jpeg
 ENTRYPOINT ["/heic2jpeg"]
