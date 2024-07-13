@@ -67,6 +67,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 		http.Error(w, "Failed to create temp directory", http.StatusInternalServerError)
 		return
 	}
+	_, _ = fmt.Fprint(w, http.StatusCreated)
 	defer os.RemoveAll(tempDir)
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(files))
@@ -113,6 +114,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 		return
 	}
 	http.ServeFile(w, r, zipPath)
+	_, _ = fmt.Fprint(w, http.StatusOK)
 }
 
 func createZip(sourceDir, zipPath, format string) error {
