@@ -62,8 +62,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 		return
 	}
 	tempDir := filepath.Join(os.TempDir(), fmt.Sprintf("heic-convert-%d", time.Now().UnixNano()))
-	err = os.MkdirAll(tempDir, os.ModePerm)
-	if err != nil {
+	if err = os.MkdirAll(tempDir, os.ModePerm); err != nil {
 		http.Error(w, "Failed to create temp directory", http.StatusInternalServerError)
 		return
 	}
@@ -166,7 +165,7 @@ func main() {
 	handler := http.Handler(router)
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "9005"
+		port = "9097"
 	}
 	server := &http.Server{
 		Addr:         "0.0.0.0:" + port,
