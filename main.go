@@ -3,7 +3,6 @@ package main
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/MaestroError/go-libheif"
 	"io"
 	"log"
 	"mime/multipart"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/MaestroError/go-libheif"
 
 	"github.com/julienschmidt/httprouter"
 )
